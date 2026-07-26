@@ -4,8 +4,8 @@
 
 1. Install Node.js 22+ and PostgreSQL 16+.
 2. Copy `.env.example` to `.env` and replace every placeholder locally.
-3. Create a database and ensure the runtime user does not own tables or have `BYPASSRLS`.
-4. Run `npm install`, `npm run db:migrate`, `npm test`, `npm run typecheck`, then `npm run dev`.
+3. Create a database and ensure the runtime user does not own tables or have `BYPASSRLS`. Keep the privileged migration URL out of the application process.
+4. Run `npm ci`, `npm run db:migrate`, `npm test`, `npm run typecheck`, then `npm run dev`.
 5. Open `http://127.0.0.1:3000`. Use synthetic data only.
 
 ## Backup and recovery
@@ -15,6 +15,7 @@ Take encrypted database backups and versioned object-store backups on compatible
 ## Security checklist
 
 - Runtime DB roles cannot own tables or bypass RLS; RLS regression tests are release blocking.
+- The narrow session security-definer functions must be owned by a dedicated migration/auth role that can bypass RLS; only the three exact functions are executable by the runtime role. Never grant the runtime role direct access to `sessions`.
 - TLS, secure cookies, CSRF, CSP, rate limits, secret rotation, outbound allowlists, and encrypted storage are configured.
 - Upload quarantine, MIME/size/page/archive limits, malware scanning, sandboxing, and storage authorization are verified.
 - Dependency, static, container, IaC, accessibility, performance, and penetration tests pass.

@@ -9,12 +9,14 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/server.js",
+    "start": "node dist/src/server.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
+    "test:integration": "vitest run tests/postgres-integration.test.ts",
     "test:watch": "vitest",
     "lint": "eslint .",
     "db:migrate": "tsx scripts/migrate.ts",
+    "db:test:setup": "tsx scripts/setup-test-database.ts",
     "db:seed": "tsx scripts/seed.ts",
     "worker": "tsx scripts/worker.ts",
     "reminders": "tsx scripts/reminders.ts"

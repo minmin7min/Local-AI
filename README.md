@@ -8,11 +8,15 @@ Start with [Architecture](docs/ARCHITECTURE.md), [Security](docs/SECURITY.md), [
 
 ```bash
 cp .env.example .env
-npm install
+npm ci
 npm run db:migrate
 npm test
 npm run typecheck
 npm run dev
 ```
 
-For a containerized local database, run `docker compose up -d db`, then run migrations and the synthetic seed locally. Process one document job with `npm run worker -- <tenant-uuid>` and generate idempotent in-app reminders with `npm run reminders -- <tenant-uuid>`.
+For the quickest synthetic-only demo, run `docker compose up --build`. Compose provisions a non-owner runtime database role, applies migrations with a separate administrative connection, and starts the app at `http://127.0.0.1:3000`. Seed it once with `docker compose run --rm -e DATABASE_URL=postgresql://pcai_runtime:local-runtime-development-only@db:5432/private_company_ai app node dist/scripts/seed.js`.
+
+CI has three explicit signals: release-blocking code quality, release-blocking PostgreSQL/RLS integration tests, and a visible non-blocking dependency advisory report. Dependabot opens grouped dependency and GitHub Actions updates. A temporary registry/advisory outage therefore cannot mark tested application code as broken, while security findings remain visible and must be triaged before release.
+
+Process one document job with `npm run worker -- <tenant-uuid>` and generate idempotent in-app reminders with `npm run reminders -- <tenant-uuid>`.
