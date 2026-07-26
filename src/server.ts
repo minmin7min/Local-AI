@@ -8,9 +8,10 @@ import{PostgresDocumentRepository}from"./adapters/postgres-documents.js";import{
 import{PostgresChatRepository}from"./adapters/postgres-chat.js";import{DeterministicProvider}from"./domain/ai.js";
 import{PostgresOperationsRepository}from"./adapters/postgres-operations.js";
 import { PostgresAdministrationRepository } from "./adapters/postgres-administration.js";
+import { PostgresEmployeeOperationsRepository } from "./adapters/postgres-employee-operations.js";
 
 const config = loadConfig();
 const pool=new pg.Pool({connectionString:config.DATABASE_URL,max:10,connectionTimeoutMillis:5000,idleTimeoutMillis:30000});
-const app=await buildApp(config,new PostgresSessionStore(pool),new PostgresEmployeeRepository(pool),new PostgresImportRepository(pool),new PostgresDocumentRepository(pool),new LocalObjectStorage(config.STORAGE_ROOT),new PostgresChatRepository(pool),new DeterministicProvider(),new PostgresOperationsRepository(pool),new PostgresAdministrationRepository(pool));
+const app=await buildApp(config,new PostgresSessionStore(pool),new PostgresEmployeeRepository(pool),new PostgresImportRepository(pool),new PostgresDocumentRepository(pool),new LocalObjectStorage(config.STORAGE_ROOT),new PostgresChatRepository(pool),new DeterministicProvider(),new PostgresOperationsRepository(pool),new PostgresAdministrationRepository(pool),new PostgresEmployeeOperationsRepository(pool));
 app.addHook("onClose",async()=>pool.end());
 await app.listen({ port: config.PORT, host: config.HOST });

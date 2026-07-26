@@ -2,6 +2,7 @@ import pg from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { PostgresSessionStore } from "../src/adapters/postgres-session-store.js";
 import { PostgresAdministrationRepository } from "../src/adapters/postgres-administration.js";
+import { PostgresEmployeeOperationsRepository } from "../src/adapters/postgres-employee-operations.js";
 
 const runtimeUrl = process.env.TEST_DATABASE_URL;
 const suite = runtimeUrl ? describe : describe.skip;
@@ -84,5 +85,17 @@ suite("PostgreSQL tenant boundary", () => {
     expect(await repository.deactivateMember(login!.principal, created.membershipId, "integration-admin-deactivate")).toBe(true);
     const updated = await repository.updateSettings(login!.principal, { timezone: "America/Vancouver", reminderDays: [30, 60, 90] }, "integration-settings");
     expect(updated.reminderDays).toEqual([30, 60, 90]);
+  });
+
+  it("scopes operational subrecords and generates source-linked deadlines", async () => {
+    const store = new PostgresSessionStore(pool);
+    const hr = await store.findLogin("northstar", "riley.chen@northstar.example.invalid");
+    const manager = await store.findLogin("northstar", "jordan.lee@northstar.example.invalid");
+    const repository = new PostgresEmployeeOperationsRepository(pool);
+    const training = await repository.addTraining(hr!.principal, "13000000-0000-4000-8000-000000000001", { title: "Synthetic food safety refresher", status: "not_started", dueAt: "2030-05-01T00:00:00.000Z" }, "integration-training");
+    expect(training?.title).toBe("Synthetic food safety refresher");
+    const ownTeam = await repository.get(manager!.principal, "13000000-0000-4000-8000-000000000001");
+    expect(ownTeam?.training.some((item) => item.id === training?.id)).toBe(true);
+    expect(await repository.get(manager!.principal, "23000000-0000-4000-8000-000000000001")).toBeUndefined();
   });
 });

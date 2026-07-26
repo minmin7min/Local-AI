@@ -16,5 +16,8 @@
 | `membership.role_change` | Role administration | Role identifiers and target membership |
 | `membership.create/deactivate` | Tenant user lifecycle | Target membership and role identifiers; never password hashes |
 | `tenant.settings_update` | Tenant settings change | Changed field names only |
+| `training.create` / `certification.create` | Operational requirement created | Employee ID, record status, and resource ID |
+| `equipment.assign` | Asset assigned | Employee ID and non-secret asset tag |
+| `reporting_relationship.change` | Manager assignment changed | Employee and manager IDs plus effective date |
 
 Audit metadata is recursively redacted for keys resembling credentials, secrets, content, government IDs, banking, medical, and other prohibited data. Authentication events that occur before membership resolution need a separate operational security log or controlled database function in the next hardening slice.

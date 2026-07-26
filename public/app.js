@@ -79,7 +79,17 @@ async function show(view) {
     }
     if (view === "employees") {
       const data = await api("/api/employees");
-      container.innerHTML = `<h2>Authorized people</h2><div class="list">${data.employees.map((employee) => `<article class="item"><strong>${escapeHtml(employee.displayName)}</strong><br>${escapeHtml(employee.position)} · ${escapeHtml(employee.departmentName)}</article>`).join("") || "<p>No authorized records.</p>"}</div>`;
+      container.innerHTML = `<h2>Authorized people</h2><div class="list">${data.employees.map((employee) => `<article class="item employee-row"><div><strong>${escapeHtml(employee.displayName)}</strong><br>${escapeHtml(employee.position)} · ${escapeHtml(employee.departmentName)}</div><button class="secondary employee-detail" data-id="${employee.id}">View record</button></article>`).join("") || "<p>No authorized records.</p>"}</div><section id="employee-operations" aria-live="polite"></section>`;
+      document.querySelectorAll(".employee-detail").forEach((button) => {
+        button.onclick = async () => {
+          const detail = $("#employee-operations"); detail.innerHTML = "<p>Loading operational record…</p>";
+          try {
+            const operations = await api(`/api/employees/${button.dataset.id}/operations`);
+            const rows = (items, render) => items.map(render).join("") || "<p class=\"muted\">None recorded.</p>";
+            detail.innerHTML = `<h3>Operational record</h3><div class="record-grid"><section><h4>Training</h4>${rows(operations.training, (item) => `<p><strong>${escapeHtml(item.title)}</strong><br>${escapeHtml(item.status)}${item.dueAt ? ` · due ${new Date(item.dueAt).toLocaleDateString()}` : ""}</p>`)}</section><section><h4>Certifications</h4>${rows(operations.certifications, (item) => `<p><strong>${escapeHtml(item.certificationType)}</strong><br>${escapeHtml(item.status)}${item.expiresAt ? ` · expires ${new Date(item.expiresAt).toLocaleDateString()}` : ""}</p>`)}</section><section><h4>Equipment</h4>${rows(operations.equipment, (item) => `<p><strong>${escapeHtml(item.assetTag)}</strong><br>${escapeHtml(item.description)}${item.returnedAt ? " · returned" : ""}</p>`)}</section></div>`;
+          } catch (error) { detail.innerHTML = `<p class="error">${escapeHtml(error.message)}</p>`; }
+        };
+      });
     }
     if (view === "documents") {
       const data = await api("/api/documents");

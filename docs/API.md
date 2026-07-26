@@ -8,6 +8,11 @@ All protected endpoints use the opaque `pcai_session` cookie. Mutating endpoints
 | GET | `/api/auth/me` | Return the active tenant identity and roles |
 | POST | `/api/auth/logout` | CSRF-protected session revocation |
 | GET/PATCH | `/api/employees[/:id]` | Scope-filtered employee operations read/update |
+| GET | `/api/employees/:id/operations` | Scope-filtered training, certification, and equipment detail |
+| POST | `/api/employees/:id/training` | HR-managed training record with deadline generation |
+| POST | `/api/employees/:id/certifications` | HR-managed certification with renewal deadline generation |
+| POST | `/api/employees/:id/equipment` | HR-managed equipment assignment |
+| PUT | `/api/employees/:id/manager` | HR-managed effective reporting relationship |
 | POST | `/api/imports/preview` | Validate and persist CSV/XLSX preview rows |
 | GET | `/api/imports/:id` | Retrieve the tenant-scoped preview and errors |
 | POST | `/api/imports/:id/commit` | Explicit, locked, idempotent import commit |
