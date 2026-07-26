@@ -1,0 +1,53 @@
+# Product and launch readiness
+
+## Current stage
+
+The repository is a functional, synthetic-data MVP and sales-demo foundation. It is suitable for customer discovery, recorded demos, and controlled design-partner evaluation using fictional data. It is **not** approved for real employee information or production deployment.
+
+| Gate | Status | Evidence / remaining work |
+|---|---|---|
+| Secure application foundation | Implemented | Opaque sessions, CSRF, rate limits, strict validation, RLS design, redacted logs |
+| Core employee-operations demo | Implemented | Employee scope, imports, training, certifications, equipment, reporting, deadlines |
+| Policy knowledge workflow | Implemented | Upload, isolated extraction, review, approval, retrieval, citations, no-answer path |
+| Tenant administration | Implemented | Synthetic users, role lifecycle, settings, session revocation, last-admin protection |
+| Local reproducible deployment | Implemented, awaiting clean Postgres execution signal | Compose splits migration and runtime roles and runs tenant-scoped workers |
+| Automated application checks | Passing locally | Lint, strict type-check, 41 unit/security tests, production build |
+| PostgreSQL/RLS integration checks | Implemented, remote result must be confirmed | Six tests run in GitHub with a non-owner/no-`BYPASSRLS` role |
+| End-to-end browser suite | Not complete | Automate the ten acceptance workflows against the full Compose stack |
+| Production identity | Blocked for real use | MFA, account recovery, invitation/verification, session-device controls, reviewed SSO path |
+| Production file security | Blocked for real use | Malware/CDR scanning, hardened parser sandbox, encrypted private object storage |
+| Production infrastructure | Blocked | Managed database/object storage/secrets, TLS ingress, monitoring, alerting, backups, restore test, IaC |
+| Privacy/legal/security approval | Blocked | Privacy impact assessment, contracts/DPA, retention/deletion policy, legal review, threat-model review, penetration test |
+| Useful production AI provider | Blocked | Provider selection, contract/privacy review, residency/retention controls, evals, budgets, timeouts, observability |
+
+## What can happen now
+
+- Demonstrate the product using only the supplied fictional tenants and sample files.
+- Interview prospective small-business owners, managers, and HR operators about the workflows and quantify time spent finding policies and tracking expirations.
+- Recruit a small number of design partners under an explicit synthetic-data/no-production-data constraint.
+- Validate the initial niche, buyer, onboarding motion, required integrations, and willingness to pay before expanding the build.
+- Prepare brand, sales materials, a waitlist, and a pilot agreement that clearly states the product's preview limitations.
+
+## Mandatory gates before real customer data
+
+1. Confirm every GitHub release-blocking check is green, including the real PostgreSQL/RLS suite.
+2. Deploy to a private staging environment with separate migration, application, and worker identities.
+3. Complete MFA, recovery, invitations, authentication audit capture, and secure email delivery.
+4. Add malware scanning/CDR, parser isolation and resource limits, production object storage, and key rotation.
+5. Implement and rehearse tenant export, deletion, backup restoration, incident response, and support-access approval.
+6. Run accessibility, load/abuse, container/IaC, end-to-end, and penetration tests; resolve high-severity findings.
+7. Obtain professional privacy, legal, employment-data, cloud-security, and AI-provider contract reviews.
+8. Replace the deterministic demo provider only after authorized-provider data handling and grounded-answer evaluations pass.
+9. Remove the synthetic-only restriction only through a reviewed release decision with documented evidence.
+
+## Recommended next engineering sequence
+
+1. Confirm and fix the GitHub PostgreSQL job until green.
+2. Add full-stack end-to-end tests for the documented demo walkthrough.
+3. Implement account invitation, email verification, MFA, and recovery.
+4. Build production staging infrastructure and observability.
+5. Add malware/CDR scanning and sandboxed document parsing.
+6. Implement export/deletion and backup-restore rehearsals.
+7. Integrate and evaluate a privacy-reviewed AI provider.
+
+Passing an automated test suite is necessary but does not make the business legally compliant, production-certified, or safe for real employee data.
