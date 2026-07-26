@@ -20,5 +20,9 @@ All protected endpoints use the opaque `pcai_session` cookie. Mutating endpoints
 | GET | `/api/deadlines` | Scope-filtered deadlines and window classification |
 | GET | `/api/notifications` | Current membership's in-app notifications |
 | GET | `/api/audit` | Tenant-admin audit viewer feed |
+| GET/POST | `/api/admin/members` | List or create synthetic tenant users |
+| PUT | `/api/admin/members/:id/roles` | Replace a membership's additive role set with last-admin protection |
+| POST | `/api/admin/members/:id/deactivate` | Deactivate a membership and revoke its sessions |
+| GET/PATCH | `/api/admin/settings` | View or update tenant timezone, retention, and reminder settings |
 
 Errors contain a request ID and omit existence details. API response schemas should be published as OpenAPI before an external integration is supported.

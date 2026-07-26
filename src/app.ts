@@ -17,9 +17,12 @@ import {registerImportRoutes} from "./routes/imports.js";
 import type{DocumentRepository,ObjectStorage}from"./domain/document-library.js";import{DocumentLibrary}from"./domain/document-library.js";import{registerDocumentRoutes}from"./routes/documents.js";
 import type{ChatRepository}from"./domain/chat.js";import{ChatService}from"./domain/chat.js";import type{AIProvider}from"./domain/ai.js";import{registerChatRoutes}from"./routes/chat.js";
 import type{OperationsRepository}from"./domain/operations.js";import{OperationsService}from"./domain/operations.js";import{registerOperationsRoutes}from"./routes/operations.js";import fastifyStatic from"@fastify/static";import{resolve}from"node:path";
+import type { AdminRepository } from "./domain/administration.js";
+import { AdministrationService } from "./domain/administration.js";
+import { registerAdministrationRoutes } from "./routes/administration.js";
 
 const loginSchema=z.object({tenantSlug:z.string().min(2).max(80),email:z.string().email().max(254),password:z.string().min(10).max(1024)});
-export async function buildApp(config:Config,store:SessionStore,employeeRepository?:EmployeeRepository,importRepository?:ImportRepository,documentRepository?:DocumentRepository,objectStorage?:ObjectStorage,chatRepository?:ChatRepository,aiProvider?:AIProvider,operationsRepository?:OperationsRepository):Promise<FastifyInstance>{
+export async function buildApp(config:Config,store:SessionStore,employeeRepository?:EmployeeRepository,importRepository?:ImportRepository,documentRepository?:DocumentRepository,objectStorage?:ObjectStorage,chatRepository?:ChatRepository,aiProvider?:AIProvider,operationsRepository?:OperationsRepository,adminRepository?:AdminRepository):Promise<FastifyInstance>{
  const app=Fastify({logger:{redact:["req.headers.authorization","req.headers.cookie","body.password"]},requestIdHeader:"x-request-id",genReqId:()=>randomUUID(),bodyLimit:config.MAX_UPLOAD_BYTES});
  const sessions=new SessionService(store,config.SESSION_TTL_SECONDS);
  await app.register(helmet,{contentSecurityPolicy:true}); await app.register(cookie,{secret:config.SESSION_SECRET,hook:"onRequest"});
@@ -42,5 +45,6 @@ export async function buildApp(config:Config,store:SessionStore,employeeReposito
  if(documentRepository&&objectStorage)registerDocumentRoutes(app,sessions,new DocumentLibrary(documentRepository,objectStorage,config.MAX_UPLOAD_BYTES));
  if(chatRepository&&aiProvider)registerChatRoutes(app,sessions,new ChatService(chatRepository,aiProvider));
  if(operationsRepository)registerOperationsRoutes(app,sessions,new OperationsService(operationsRepository));
+ if(adminRepository)registerAdministrationRoutes(app,sessions,new AdministrationService(adminRepository));
  return app;
 }
