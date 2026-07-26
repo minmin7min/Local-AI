@@ -10,9 +10,10 @@ The repository is a functional, synthetic-data MVP and sales-demo foundation. It
 | Core employee-operations demo | Implemented | Employee scope, imports, training, certifications, equipment, reporting, deadlines |
 | Policy knowledge workflow | Implemented | Upload, isolated extraction, review, approval, retrieval, citations, no-answer path |
 | Tenant administration | Implemented | Synthetic users, role lifecycle, settings, session revocation, last-admin protection |
-| Local reproducible deployment | Implemented, awaiting clean Postgres execution signal | Compose splits migration and runtime roles and runs tenant-scoped workers |
-| Automated application checks | Passing locally | Lint, strict type-check, 41 unit/security tests, production build |
-| PostgreSQL/RLS integration checks | Implemented, remote result must be confirmed | Six tests run in GitHub with a non-owner/no-`BYPASSRLS` role |
+| Local reproducible deployment | Implemented and CI-verified | Compose splits migration and runtime roles, runs tenant-scoped workers, and uses the runner PostgreSQL service in CI |
+| Automated application checks | Passing locally and in GitHub | Lint, strict type-check, 41 unit/security tests, production build; see [CI run #29](https://github.com/minmin7min/Local-AI/actions/runs/30210147460) |
+| PostgreSQL/RLS integration checks | Passing in GitHub | Six tests execute with a non-owner/no-`BYPASSRLS` role and are release-blocking |
+| Dependency security | Passing | npm reports zero known vulnerabilities; high-severity production findings fail CI while advisory-service outages remain visible warnings |
 | End-to-end browser suite | Not complete | Automate the ten acceptance workflows against the full Compose stack |
 | Production identity | Blocked for real use | MFA, account recovery, invitation/verification, session-device controls, reviewed SSO path |
 | Production file security | Blocked for real use | Malware/CDR scanning, hardened parser sandbox, encrypted private object storage |
@@ -42,12 +43,11 @@ The repository is a functional, synthetic-data MVP and sales-demo foundation. It
 
 ## Recommended next engineering sequence
 
-1. Confirm and fix the GitHub PostgreSQL job until green.
-2. Add full-stack end-to-end tests for the documented demo walkthrough.
-3. Implement account invitation, email verification, MFA, and recovery.
-4. Build production staging infrastructure and observability.
-5. Add malware/CDR scanning and sandboxed document parsing.
-6. Implement export/deletion and backup-restore rehearsals.
-7. Integrate and evaluate a privacy-reviewed AI provider.
+1. Add full-stack end-to-end tests for the documented demo walkthrough.
+2. Implement account invitation, email verification, MFA, and recovery.
+3. Build production staging infrastructure and observability.
+4. Add malware/CDR scanning and sandboxed document parsing.
+5. Implement export/deletion and backup-restore rehearsals.
+6. Integrate and evaluate a privacy-reviewed AI provider.
 
 Passing an automated test suite is necessary but does not make the business legally compliant, production-certified, or safe for real employee data.
