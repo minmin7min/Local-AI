@@ -4,7 +4,9 @@ const $ = (selector) => document.querySelector(selector);
 const escapeHtml = (value) => String(value).replace(/[&<>'"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[character]);
 
 async function api(path, options = {}) {
-  const response = await fetch(path, { ...options, headers: { "content-type": "application/json", ...(csrf ? { "x-csrf-token": csrf } : {}), ...options.headers } });
+  const headers = { ...(csrf ? { "x-csrf-token": csrf } : {}), ...options.headers };
+  if (!(options.body instanceof FormData)) headers["content-type"] = "application/json";
+  const response = await fetch(path, { ...options, headers });
   if (response.status === 204) return null;
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || "Request failed");
@@ -15,7 +17,7 @@ const roleOptions = ["employee", "manager", "hr", "owner", "tenant_admin"];
 const roleChecks = (selected = []) => roleOptions.map((role) => `<label class="check"><input type="checkbox" name="roles" value="${role}" ${selected.includes(role) ? "checked" : ""}>${role.replace("_", " ")}</label>`).join("");
 
 async function renderAdministration(container) {
-  const [memberData, settings] = await Promise.all([api("/api/admin/members"), api("/api/admin/settings")]);
+  const [memberData, settings, auditData] = await Promise.all([api("/api/admin/members"), api("/api/admin/settings"), activeRoles.includes("tenant_admin") ? api("/api/audit") : Promise.resolve({ events: [] })]);
   container.innerHTML = `<h2>Tenant administration</h2>
     <p class="muted">This development preview accepts synthetic <code>.example.invalid</code> users only. Email delivery is disabled.</p>
     <div class="admin-grid">
@@ -38,7 +40,7 @@ async function renderAdministration(container) {
     <h3>Users and roles</h3><div class="list">${memberData.members.map((member) => `<article class="item member ${member.deactivatedAt ? "inactive" : ""}">
       <div><strong>${escapeHtml(member.displayName)}</strong><br><span>${escapeHtml(member.email)}</span>${member.deactivatedAt ? "<br><em>Deactivated</em>" : ""}</div>
       ${member.deactivatedAt ? "" : `<form class="role-form compact" data-id="${member.membershipId}"><fieldset><legend class="sr-only">Roles for ${escapeHtml(member.displayName)}</legend><div class="role-grid">${roleChecks(member.roles)}</div></fieldset><div class="actions"><button>Update roles</button><button type="button" class="danger deactivate">Deactivate</button></div><p class="form-status" role="status"></p></form>`}
-    </article>`).join("")}</div>`;
+    </article>`).join("")}</div>${activeRoles.includes("tenant_admin") ? `<h3>Recent audit events</h3><div class="list">${auditData.events.map((event) => `<article class="item"><strong>${escapeHtml(event.action)}</strong><br>${escapeHtml(event.resourceType)} · ${new Date(event.occurredAt).toLocaleString()} · ${escapeHtml(event.outcome)}</article>`).join("") || "<p>No audit events.</p>"}</div>` : ""}`;
 
   $("#settings-form").onsubmit = async (event) => {
     event.preventDefault(); const form = event.currentTarget; const status = form.querySelector(".form-status"); status.textContent = "Saving…";
@@ -93,11 +95,24 @@ async function show(view) {
     }
     if (view === "documents") {
       const data = await api("/api/documents");
-      container.innerHTML = `<h2>Policy library</h2><div class="list">${data.documents.map((document) => `<article class="item"><strong>${escapeHtml(document.title)}</strong><br>Version ${escapeHtml(document.version)} · ${escapeHtml(document.state)}</article>`).join("") || "<p>No approved policies yet.</p>"}</div>`;
+      const manage = activeRoles.includes("tenant_admin");
+      container.innerHTML = `<h2>Policy library</h2>${manage ? `<form id="document-upload" class="compact"><label>Policy title<input name="title" required maxlength="200"></label><label>Audience roles<input name="audience" value="employee,manager,hr,owner,tenant_admin" required></label><label>PDF, DOCX, CSV, or XLSX file<input name="file" type="file" accept=".pdf,.docx,.csv,.xlsx" required></label><button>Upload for extraction</button><p class="form-status" role="status"></p></form>` : ""}<div class="list">${data.documents.map((document) => `<article class="item employee-row"><div><strong>${escapeHtml(document.title)}</strong><br>Version ${escapeHtml(document.version)} · ${escapeHtml(document.state)}</div>${manage && document.state === "review" ? `<button class="approve-document" data-id="${document.id}">Approve current version</button>` : ""}</article>`).join("") || "<p>No approved policies yet.</p>"}</div>`;
+      if (manage) {
+        $("#document-upload").onsubmit = async (event) => { event.preventDefault(); const form = event.currentTarget; const status = form.querySelector(".form-status"); const data = new FormData(form); const title = data.get("title"); const audience = data.get("audience"); status.textContent = "Uploading…"; try { await api(`/api/documents?title=${encodeURIComponent(title)}&audience=${encodeURIComponent(audience)}`, { method: "POST", body: data }); status.textContent = "Uploaded. The isolated worker will extract it for review."; } catch (error) { status.textContent = error.message; status.classList.add("error"); } };
+        document.querySelectorAll(".approve-document").forEach((button) => { button.onclick = async () => { await api(`/api/documents/${button.dataset.id}/approve`, { method: "POST", body: "{}" }); await show("documents"); }; });
+      }
     }
     if (view === "deadlines") {
       const data = await api("/api/deadlines");
       container.innerHTML = `<h2>Operational deadlines</h2><div class="list">${data.deadlines.map((deadline) => `<article class="item"><strong>${escapeHtml(deadline.title)}</strong><br>${escapeHtml(deadline.employeeName)} · ${new Date(deadline.dueAt).toLocaleDateString()} · ${escapeHtml(deadline.window)}</article>`).join("") || "<p>No deadlines in your scope.</p>"}</div>`;
+    }
+    if (view === "notifications") {
+      const data = await api("/api/notifications");
+      container.innerHTML = `<h2>Notifications</h2><div class="list">${data.notifications.map((notification) => `<article class="item"><strong>${escapeHtml(notification.title)}</strong><br>${escapeHtml(notification.body)}<br><span class="muted">${new Date(notification.createdAt).toLocaleString()}</span></article>`).join("") || "<p>No notifications.</p>"}</div>`;
+    }
+    if (view === "imports") {
+      container.innerHTML = `<h2>Import fictional employees</h2><p class="muted">Use the canonical column headers from the sample workbook. Preview and correct every row before committing.</p><form id="import-form" class="compact"><label>CSV or XLSX file<input name="file" type="file" accept=".csv,.xlsx" required></label><button>Validate and preview</button><p class="form-status" role="status"></p></form><div id="import-preview"></div>`;
+      $("#import-form").onsubmit = async (event) => { event.preventDefault(); const form = event.currentTarget; const status = form.querySelector(".form-status"); status.textContent = "Validating…"; try { const preview = await api("/api/imports/preview", { method: "POST", body: new FormData(form) }); const errors = preview.rows.flatMap((row) => row.errors.map((error) => `Row ${row.rowNumber}: ${error}`)); $("#import-preview").innerHTML = `<h3>Preview</h3><p>${preview.validRows} valid · ${preview.invalidRows} invalid</p>${errors.length ? `<ul>${errors.map((error) => `<li>${escapeHtml(error)}</li>`).join("")}</ul>` : `<button id="commit-import">Commit ${preview.validRows} rows</button>`}`; status.textContent = "Preview ready. No records have been changed."; if (!errors.length) $("#commit-import").onclick = async () => { const result = await api(`/api/imports/${preview.id}/commit`, { method: "POST", body: "{}" }); $("#import-preview").innerHTML = `<p><strong>Import complete:</strong> ${result.created} created, ${result.skipped} skipped.</p>`; }; } catch (error) { status.textContent = error.message; status.classList.add("error"); } };
     }
     if (view === "chat") {
       container.innerHTML = `<h2>Ask an approved-policy question</h2><form id="ask"><label>Question<textarea name="question" rows="4" required placeholder="What should I do if I am sick today?"></textarea></label><button>Find an approved answer</button></form><div id="answer"></div>`;
@@ -115,7 +130,7 @@ $("#login-form").onsubmit = async (event) => {
   event.preventDefault(); const fields = Object.fromEntries(new FormData(event.currentTarget));
   try {
     const data = await api("/api/auth/login", { method: "POST", body: JSON.stringify(fields) });
-    csrf = data.csrfToken; activeRoles = data.user.roles; $("#admin-nav").hidden = !activeRoles.some((role) => role === "owner" || role === "tenant_admin");
+    csrf = data.csrfToken; activeRoles = data.user.roles; $("#admin-nav").hidden = !activeRoles.some((role) => role === "owner" || role === "tenant_admin"); $("#imports-nav").hidden = !activeRoles.some((role) => role === "hr" || role === "tenant_admin");
     $("#login").hidden = true; $("#app").hidden = false; show("dashboard");
   } catch (error) { $("#login-error").textContent = error.message; }
 };

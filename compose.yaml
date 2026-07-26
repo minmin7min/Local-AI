@@ -42,6 +42,28 @@ services:
       SESSION_TTL_SECONDS: 28800
     ports: ["127.0.0.1:3000:3000"]
     volumes: ["object-storage:/app/storage"]
+  worker-northstar:
+    build: .
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+    command: ["node", "dist/scripts/worker.js", "10000000-0000-4000-8000-000000000001", "--loop"]
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://pcai_runtime:local-runtime-development-only@db:5432/private_company_ai
+      SESSION_SECRET: local-compose-placeholder-change-before-use
+      STORAGE_ROOT: /app/storage
+    volumes: ["object-storage:/app/storage"]
+  worker-cedar:
+    build: .
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+    command: ["node", "dist/scripts/worker.js", "20000000-0000-4000-8000-000000000001", "--loop"]
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://pcai_runtime:local-runtime-development-only@db:5432/private_company_ai
+      SESSION_SECRET: local-compose-placeholder-change-before-use
+      STORAGE_ROOT: /app/storage
+    volumes: ["object-storage:/app/storage"]
 volumes:
   postgres-data:
   object-storage:
