@@ -1,9 +1,9 @@
 import {createHash,randomUUID} from "node:crypto";
-import ExcelJS from "exceljs";
 import {parse as parseCsv} from "csv-parse/sync";
 import {requirePermission,type Principal} from "./authz.js";
 import {validateRows,type RowResult} from "./imports.js";
 import {validateUpload} from "./documents.js";
+import {readXlsx} from "./xlsx.js";
 
 const canonical=["internalEmployeeId","displayName","workEmail","department","position","employmentStatus","employmentCategory","startDate","contractExpirationDate"] as const;
 export interface ImportPreview {id:string;filename:string;sha256:string;headers:string[];rows:RowResult[];validRows:number;invalidRows:number;status:"preview"|"committed"}
@@ -18,7 +18,7 @@ function normalizeDate(value:unknown):string|undefined{
 export async function parseEmployeeImport(buffer:Buffer,filename:string,maxBytes:number):Promise<Omit<ImportPreview,"id"|"status">>{
  const valid=await validateUpload(buffer,filename,maxBytes);let matrix:unknown[][]=[];
  if(valid.mediaType==="text/csv")matrix=parseCsv(buffer,{bom:true,skip_empty_lines:true,relax_column_count:true}) as unknown[][];
- else{const workbook=new ExcelJS.Workbook();await workbook.xlsx.load(buffer as any);const sheet=workbook.worksheets[0];if(!sheet)throw new Error("Workbook has no worksheet");sheet.eachRow({includeEmpty:false},row=>{const values:unknown[]=[];for(let column=1;column<=sheet.actualColumnCount;column++){const value=row.getCell(column).value;if(value&&typeof value==="object"&&("formula"in value||"sharedFormula"in value))throw new Error("Spreadsheet formulas are not accepted; upload values only");values.push(value??"");}matrix.push(values);});}
+ else{const [sheet]=await readXlsx(buffer,1);if(!sheet)throw new Error("Workbook has no worksheet");matrix=sheet.rows;}
  if(matrix.length<2)throw new Error("The import must contain a header and at least one row");
  let headerIndex=-1;let best=0;for(let i=0;i<Math.min(matrix.length,10);i++){const score=(matrix[i]??[]).map(v=>String(v).trim()).filter(v=>(canonical as readonly string[]).includes(v)).length;if(score>best){best=score;headerIndex=i;}}
  if(headerIndex<0||best<7)throw new Error("Could not find the required employee header row");
