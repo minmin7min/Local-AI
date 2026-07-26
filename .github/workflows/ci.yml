@@ -58,10 +58,18 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - name: Report high-severity production dependency findings
+      - name: Enforce high-severity production dependency audit
         run: |
-          if npm audit --package-lock-only --omit=dev --audit-level=high; then
+          set +e
+          audit_output=$(npm audit --package-lock-only --omit=dev --audit-level=high 2>&1)
+          audit_status=$?
+          set -e
+          printf '%s\n' "$audit_output"
+          if [ "$audit_status" -eq 0 ]; then
             echo "Production dependency advisory check passed."
+          elif printf '%s\n' "$audit_output" | grep -Eqi 'audit endpoint returned an error|ENOTFOUND|ECONNRESET|ETIMEDOUT|EAI_AGAIN|network request'; then
+            echo "::warning::The npm advisory service is unavailable. Dependabot remains enabled; retry this check before production release."
           else
-            echo "::warning::The npm advisory check reported findings or an advisory-service error. Dependabot remains enabled; triage this output before production release."
+            echo "::error::High-severity production dependency findings must be resolved before release."
+            exit "$audit_status"
           fi
