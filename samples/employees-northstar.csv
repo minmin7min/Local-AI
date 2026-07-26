@@ -1,0 +1,5 @@
+internalEmployeeId,displayName,workEmail,department,position,employmentStatus,employmentCategory,startDate,contractExpirationDate
+NS-100,Avery Morgan,avery.morgan@northstar.example.invalid,Operations,Cafe Associate,active,full_time,2030-01-15,
+NS-101,Jordan Lee,jordan.lee@northstar.example.invalid,Operations,Shift Manager,active,full_time,2029-06-01,
+NS-102,Riley Chen,riley.chen@northstar.example.invalid,People Operations,HR Coordinator,active,full_time,2029-08-20,
+NS-103,Casey Bennett,casey.bennett@northstar.example.invalid,Leadership,Owner,active,full_time,2028-03-10,

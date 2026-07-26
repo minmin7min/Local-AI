@@ -1,0 +1,4 @@
+internalEmployeeId,displayName,workEmail,department,position,employmentStatus,employmentCategory,startDate,contractExpirationDate
+CP-100,Avery Morgan,avery.morgan@cedar.example.invalid,Field Operations,Property Technician,active,full_time,2030-02-01,
+CP-101,Jordan Lee,jordan.lee@cedar.example.invalid,Field Operations,Service Manager,active,full_time,2029-07-15,
+CP-102,Riley Chen,riley.chen@cedar.example.invalid,Administration,Operations Coordinator,active,full_time,2029-09-05,
