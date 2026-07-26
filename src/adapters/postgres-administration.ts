@@ -35,7 +35,7 @@ export class PostgresAdministrationRepository implements AdminRepository {
     return this.tx(principal, async (client) => {
       const result = await client.query(
         `SELECT m.id membership_id,u.id user_id,u.email,u.display_name,m.deactivated_at::text,
-                coalesce(array_agg(mr.role) FILTER(WHERE mr.role IS NOT NULL),'{}') roles
+                coalesce(array_agg(mr.role) FILTER(WHERE mr.role IS NOT NULL),'{}'::tenant_role[])::text[] roles
          FROM memberships m JOIN users u ON u.id=m.user_id
          LEFT JOIN membership_roles mr ON mr.tenant_id=m.tenant_id AND mr.membership_id=m.id
          GROUP BY m.id,m.tenant_id,u.id ORDER BY (m.deactivated_at IS NOT NULL),u.display_name`,
@@ -70,7 +70,7 @@ export class PostgresAdministrationRepository implements AdminRepository {
   async replaceRoles(principal: Principal, membershipId: string, nextRoles: Role[], requestId: string): Promise<MemberView | undefined> {
     return this.tx(principal, async (client) => {
       const current = await client.query<{ roles: Role[]; deactivated_at: string | null }>(
-        `SELECT m.deactivated_at,coalesce(array_agg(mr.role) FILTER(WHERE mr.role IS NOT NULL),'{}') roles
+        `SELECT m.deactivated_at,coalesce(array_agg(mr.role) FILTER(WHERE mr.role IS NOT NULL),'{}'::tenant_role[])::text[] roles
          FROM memberships m LEFT JOIN membership_roles mr ON mr.tenant_id=m.tenant_id AND mr.membership_id=m.id
          WHERE m.id=$1 GROUP BY m.id,m.tenant_id`, [membershipId],
       );
@@ -88,7 +88,7 @@ export class PostgresAdministrationRepository implements AdminRepository {
       await this.audit(client, principal, requestId, "membership.role_change", "membership", membershipId, { previousRoles: current.rows[0].roles, roles: nextRoles });
       const result = await client.query(
         `SELECT m.id membership_id,u.id user_id,u.email,u.display_name,m.deactivated_at::text,
-                coalesce(array_agg(mr.role) FILTER(WHERE mr.role IS NOT NULL),'{}') roles
+                coalesce(array_agg(mr.role) FILTER(WHERE mr.role IS NOT NULL),'{}'::tenant_role[])::text[] roles
          FROM memberships m JOIN users u ON u.id=m.user_id LEFT JOIN membership_roles mr ON mr.tenant_id=m.tenant_id AND mr.membership_id=m.id
          WHERE m.id=$1 GROUP BY m.id,m.tenant_id,u.id`, [membershipId],
       );
