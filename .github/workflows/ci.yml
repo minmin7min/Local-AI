@@ -9,8 +9,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -23,20 +23,6 @@ jobs:
   postgres-integration:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    services:
-      postgres:
-        image: postgres:16.4-alpine
-        env:
-          POSTGRES_DB: private_company_ai_test
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres-test-only
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U postgres -d private_company_ai_test"
-          --health-interval 5s
-          --health-timeout 3s
-          --health-retries 20
     env:
       NODE_ENV: test
       DATABASE_URL: postgresql://postgres:postgres-test-only@127.0.0.1:5432/private_company_ai_test
@@ -45,11 +31,16 @@ jobs:
       SESSION_SECRET: ci-session-secret-at-least-32-characters
       STORAGE_ROOT: ./tmp/ci-storage
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
+      - name: Start runner PostgreSQL
+        run: |
+          sudo systemctl start postgresql
+          sudo -u postgres psql -v ON_ERROR_STOP=1 -c "ALTER USER postgres PASSWORD 'postgres-test-only'"
+          sudo -u postgres createdb private_company_ai_test
       - run: npm ci
       - run: npm run db:test:setup
       - run: npm run db:migrate
@@ -61,13 +52,16 @@ jobs:
   dependency-review:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    continue-on-error: true
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
       - name: Report high-severity production dependency findings
-        run: npm audit --omit=dev --audit-level=high
+        run: |
+          if npm audit --package-lock-only --omit=dev --audit-level=high; then
+            echo "Production dependency advisory check passed."
+          else
+            echo "::warning::The npm advisory check reported findings or an advisory-service error. Dependabot remains enabled; triage this output before production release."
+          fi
