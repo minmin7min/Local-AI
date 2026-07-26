@@ -3,9 +3,13 @@ import { loadConfig } from "./config.js";
 import { buildApp } from "./app.js";
 import { PostgresSessionStore } from "./adapters/postgres-session-store.js";
 import {PostgresEmployeeRepository} from "./adapters/postgres-employees.js";
+import {PostgresImportRepository} from "./adapters/postgres-imports.js";
+import{PostgresDocumentRepository}from"./adapters/postgres-documents.js";import{LocalObjectStorage}from"./adapters/local-storage.js";
+import{PostgresChatRepository}from"./adapters/postgres-chat.js";import{DeterministicProvider}from"./domain/ai.js";
+import{PostgresOperationsRepository}from"./adapters/postgres-operations.js";
 
 const config = loadConfig();
 const pool=new pg.Pool({connectionString:config.DATABASE_URL,max:10,connectionTimeoutMillis:5000,idleTimeoutMillis:30000});
-const app=await buildApp(config,new PostgresSessionStore(pool),new PostgresEmployeeRepository(pool));
+const app=await buildApp(config,new PostgresSessionStore(pool),new PostgresEmployeeRepository(pool),new PostgresImportRepository(pool),new PostgresDocumentRepository(pool),new LocalObjectStorage(config.STORAGE_ROOT),new PostgresChatRepository(pool),new DeterministicProvider(),new PostgresOperationsRepository(pool));
 app.addHook("onClose",async()=>pool.end());
-await app.listen({ port: config.PORT, host: "127.0.0.1" });
+await app.listen({ port: config.PORT, host: config.HOST });

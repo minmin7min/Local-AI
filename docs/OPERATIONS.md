@@ -24,4 +24,4 @@ Take encrypted database backups and versioned object-store backups on compatible
 
 ## Known MVP limitations
 
-The current foundation does not make the platform production-ready. MFA, recovery, email delivery, OCR, malware scanning, vector retrieval, external provider integration, support access, full UI workflows, export/deletion execution, and production infrastructure are intentionally restricted or pending. The deterministic AI provider is safe for tests, not a useful production model.
+The current MVP does not make the platform production-ready. MFA, account recovery, email delivery, OCR, malware/CDR scanning, vector retrieval, a production AI provider, time-limited support access, membership-management UI, tenant export/deletion execution, automated authentication audit capture, full end-to-end browser testing, and production infrastructure are intentionally restricted or pending. The deterministic AI provider is safe for tests and demonstrations, not a useful production model.

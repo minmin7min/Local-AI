@@ -25,20 +25,14 @@ export class PostgresSessionStore implements SessionStore {
     } catch(error) { await client.query("ROLLBACK"); throw error; } finally { client.release(); }
   }
   async create(record:SessionRecord) {
-    await this.pool.query(`INSERT INTO sessions(id_hash,tenant_id,membership_id,user_id,csrf_hash,expires_at) VALUES($1,$2,$3,$4,$5,$6)`,
+    await this.pool.query(`SELECT auth_create_session($1,$2,$3,$4,$5,$6)`,
       [record.idHash,record.principal.tenantId,record.principal.membershipId,record.principal.userId,record.csrfHash,record.expiresAt]);
   }
   async findActive(idHash:string,now:Date) {
     const result=await this.pool.query<{id_hash:string;tenant_id:string;membership_id:string;user_id:string;csrf_hash:string;expires_at:Date;roles:Role[];employee_id:string|null}>(
-      `SELECT s.id_hash,s.tenant_id,s.membership_id,s.user_id,s.csrf_hash,s.expires_at,
-       coalesce(array_agg(mr.role) FILTER (WHERE mr.role IS NOT NULL),'{}') roles,e.id employee_id
-       FROM sessions s JOIN memberships m ON m.tenant_id=s.tenant_id AND m.id=s.membership_id AND m.deactivated_at IS NULL
-       LEFT JOIN membership_roles mr ON mr.tenant_id=m.tenant_id AND mr.membership_id=m.id
-       LEFT JOIN employees e ON e.tenant_id=m.tenant_id AND e.membership_id=m.id AND e.archived_at IS NULL
-       WHERE s.id_hash=$1 AND s.revoked_at IS NULL AND s.expires_at>$2
-       GROUP BY s.id_hash,s.tenant_id,s.membership_id,s.user_id,s.csrf_hash,s.expires_at,e.id`,[idHash,now]);
+      `SELECT * FROM auth_resolve_session($1,$2)`,[idHash,now]);
     const row=result.rows[0]; if(!row) return undefined;
     return {idHash:row.id_hash,csrfHash:row.csrf_hash,expiresAt:row.expires_at,principal:{userId:row.user_id,tenantId:row.tenant_id,membershipId:row.membership_id,roles:row.roles,...(row.employee_id?{employeeId:row.employee_id}:{})}};
   }
-  async revoke(idHash:string,now:Date) { await this.pool.query("UPDATE sessions SET revoked_at=$2 WHERE id_hash=$1 AND revoked_at IS NULL",[idHash,now]); }
+  async revoke(idHash:string,now:Date) { await this.pool.query("SELECT auth_revoke_session($1,$2)",[idHash,now]); }
 }

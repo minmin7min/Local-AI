@@ -1,0 +1,2 @@
+import{describe,expect,it}from"vitest";import{deadlineScope}from"../src/domain/operations.js";
+describe("deadline authorization scope",()=>{it("does not elevate tenant administrators into employee content",()=>{expect(deadlineScope({userId:"u",tenantId:"t",membershipId:"m",roles:["tenant_admin"]})).toBe("none");expect(deadlineScope({userId:"h",tenantId:"t",membershipId:"m2",roles:["hr"]})).toBe("tenant");});});

@@ -1,0 +1,2 @@
+import{describe,expect,it}from"vitest";import{extractText}from"../src/domain/extraction.js";
+describe("safe extraction",()=>{it("extracts spreadsheet values without evaluating formulas",async()=>{const sections=await extractText(Buffer.from("topic,instruction\nSick,Contact the shift manager"),"text/csv");expect(sections[0]?.content).toContain("Contact the shift manager");});it("rejects unsupported active content",async()=>{await expect(extractText(Buffer.from("x"),"application/javascript")).rejects.toThrow();});});

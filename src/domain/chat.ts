@@ -1,0 +1,7 @@
+import{randomUUID,createHash}from"node:crypto";import type{Principal}from"./authz.js";import type{AIProvider,Evidence,GroundedAnswer}from"./ai.js";import{validateAnswer}from"./ai.js";
+export interface SavedChat{sessionId:string;messageId:string;answer:string;citations:Array<{id:string;sourceType:string;title:string;version?:number;section?:string;page?:number;updatedAt:string;previewUrl:string}>}
+export interface CitationPreview{title:string;version?:number;section?:string;page?:number;updatedAt:string;content:string}
+export interface ChatRepository{retrieve(principal:Principal,question:string):Promise<Evidence[]>;save(principal:Principal,input:{sessionId?:string;question:string;answer:GroundedAnswer;evidence:Evidence[]}):Promise<SavedChat>;citation(principal:Principal,id:string):Promise<CitationPreview|undefined>}
+export class ChatService{constructor(private readonly repository:ChatRepository,private readonly provider:AIProvider){}async ask(principal:Principal,question:string,sessionId?:string){const evidence=await this.repository.retrieve(principal,question);const answer=validateAnswer(await this.provider.answer(question,evidence),evidence);return this.repository.save(principal,{...(sessionId?{sessionId}:{}),question,answer,evidence});}citation(principal:Principal,id:string){return this.repository.citation(principal,id);}}
+export const questionFingerprint=(q:string)=>createHash("sha256").update(q).digest("hex").slice(0,16);
+export const newChatId=()=>randomUUID();
