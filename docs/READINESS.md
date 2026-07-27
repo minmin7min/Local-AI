@@ -11,11 +11,11 @@ The repository is a functional, synthetic-data MVP and sales-demo foundation. It
 | Policy knowledge workflow | Implemented | Upload, isolated extraction, review, approval, retrieval, citations, no-answer path |
 | Tenant administration | Implemented | Synthetic users, role lifecycle, settings, session revocation, last-admin protection |
 | Local reproducible deployment | Implemented and CI-verified | Compose splits migration and runtime roles, runs tenant-scoped workers, and uses the runner PostgreSQL service in CI |
-| Automated application checks | Passing locally and in GitHub | Lint, strict type-check, 41 unit/security tests, production build; see [CI run #29](https://github.com/minmin7min/Local-AI/actions/runs/30210147460) |
-| PostgreSQL/RLS integration checks | Passing in GitHub | Six tests execute with a non-owner/no-`BYPASSRLS` role and are release-blocking |
+| Automated application checks | Passing locally; pending GitHub verification for this change | Lint, strict type-check, 45 unit/security tests, and the production build pass locally |
+| PostgreSQL/RLS integration checks | Passing locally; pending GitHub verification for this change | Seven tests execute with a non-owner/no-`BYPASSRLS` role and are release-blocking |
 | Dependency security | Passing | npm reports zero known vulnerabilities; high-severity production findings fail CI while advisory-service outages remain visible warnings |
-| End-to-end browser suite | Not complete | Automate the ten acceptance workflows against the full Compose stack |
-| Production identity | Blocked for real use | MFA, account recovery, invitation/verification, session-device controls, reviewed SSO path |
+| End-to-end browser suite | Core journeys implemented | Four Chromium tests gate full-demo entry, grounded answers, employee records, administration, invitation activation, role visibility, and cross-tenant denial in the PostgreSQL CI job; destructive upload/import workflows remain to automate |
+| Production identity | In progress; blocked for real use | Hashed 48-hour one-time invitations and password setup are implemented. Secure email delivery, address verification, MFA, recovery, breached-password checks, session-device controls, and reviewed SSO remain |
 | Production file security | Blocked for real use | Malware/CDR scanning, hardened parser sandbox, encrypted private object storage |
 | Production infrastructure | Blocked | Managed database/object storage/secrets, TLS ingress, monitoring, alerting, backups, restore test, IaC |
 | Privacy/legal/security approval | Blocked | Privacy impact assessment, contracts/DPA, retention/deletion policy, legal review, threat-model review, penetration test |
@@ -43,8 +43,8 @@ The repository is a functional, synthetic-data MVP and sales-demo foundation. It
 
 ## Recommended next engineering sequence
 
-1. Add full-stack end-to-end tests for the documented demo walkthrough.
-2. Implement account invitation, email verification, MFA, and recovery.
+1. Extend the full-stack browser suite to destructive import/upload/approval workflows.
+2. Complete secure invitation email delivery, email verification, MFA, and recovery.
 3. Build production staging infrastructure and observability.
 4. Add malware/CDR scanning and sandboxed document parsing.
 5. Implement export/deletion and backup-restore rehearsals.

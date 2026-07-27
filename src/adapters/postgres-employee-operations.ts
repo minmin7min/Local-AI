@@ -26,11 +26,11 @@ export class PostgresEmployeeOperationsRepository implements EmployeeOperationsR
       const values: unknown[] = [employeeId]; const scope = authorizedScope(principal, values);
       const employee = await client.query(`SELECT 1 FROM employees e WHERE e.id=$1 AND e.archived_at IS NULL AND ${scope}`, values);
       if (!employee.rows[0]) return undefined;
-      const [training, certifications, equipment] = await Promise.all([
-        client.query("SELECT id,title,status,due_at::text,completed_at::text FROM employee_training WHERE employee_id=$1 ORDER BY due_at NULLS LAST,title", [employeeId]),
-        client.query("SELECT id,certification_type,status,expires_at::text FROM employee_certifications WHERE employee_id=$1 ORDER BY expires_at NULLS LAST,certification_type", [employeeId]),
-        client.query("SELECT id,asset_tag,description,assigned_at::text,returned_at::text FROM equipment_assignments WHERE employee_id=$1 ORDER BY assigned_at DESC", [employeeId]),
-      ]);
+      // A pg PoolClient executes one query at a time. Keep these tenant-scoped reads
+      // sequential so the transaction boundary remains explicit and pg 9 compatible.
+      const training = await client.query("SELECT id,title,status,due_at::text,completed_at::text FROM employee_training WHERE employee_id=$1 ORDER BY due_at NULLS LAST,title", [employeeId]);
+      const certifications = await client.query("SELECT id,certification_type,status,expires_at::text FROM employee_certifications WHERE employee_id=$1 ORDER BY expires_at NULLS LAST,certification_type", [employeeId]);
+      const equipment = await client.query("SELECT id,asset_tag,description,assigned_at::text,returned_at::text FROM equipment_assignments WHERE employee_id=$1 ORDER BY assigned_at DESC", [employeeId]);
       return {
         employeeId,
         training: training.rows.map((row): TrainingView => ({ id: row.id, title: row.title, status: row.status, ...(row.due_at ? { dueAt: row.due_at } : {}), ...(row.completed_at ? { completedAt: row.completed_at } : {}) })),

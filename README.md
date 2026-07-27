@@ -4,7 +4,7 @@ A security-first foundation for a multi-tenant employee-operations assistant. **
 
 Implemented foundations include a normalized PostgreSQL schema, forced row-level security, tenant-scoped composite constraints, opaque sessions, additive authorization, employee operations APIs, CSV/XLSX preview and commit, document upload/extraction/approval, authorized retrieval and citations, deadlines, notifications, audit viewing, a responsive browser UI, synthetic fixtures, and release-blocking isolation tests.
 
-Start with [Architecture](docs/ARCHITECTURE.md), [Security](docs/SECURITY.md), [Authorization](docs/AUTHORIZATION.md), [API](docs/API.md), [Audit events](docs/AUDIT_EVENTS.md), [Operations](docs/OPERATIONS.md), [Synthetic demo runbook](docs/DEMO_RUNBOOK.md), and [Product and launch readiness](docs/READINESS.md).
+Start with [Architecture](docs/ARCHITECTURE.md), [Security](docs/SECURITY.md), [Authorization](docs/AUTHORIZATION.md), [API](docs/API.md), [Audit events](docs/AUDIT_EVENTS.md), [Operations](docs/OPERATIONS.md), [Synthetic demo runbook](docs/DEMO_RUNBOOK.md), [Product and launch readiness](docs/READINESS.md), and [Launch decisions](docs/LAUNCH_DECISIONS.md).
 
 ```bash
 cp .env.example .env

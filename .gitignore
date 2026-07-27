@@ -4,6 +4,9 @@ dist/
 coverage/
 storage/
 storage-demo/
+playwright-report/
+test-results/
+tmp/e2e-storage/
 *.log
 .DS_Store
 tmp/

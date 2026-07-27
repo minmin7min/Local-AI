@@ -9,9 +9,10 @@ import{PostgresChatRepository}from"./adapters/postgres-chat.js";import{Determini
 import{PostgresOperationsRepository}from"./adapters/postgres-operations.js";
 import { PostgresAdministrationRepository } from "./adapters/postgres-administration.js";
 import { PostgresEmployeeOperationsRepository } from "./adapters/postgres-employee-operations.js";
+import { PostgresInvitationRepository } from "./adapters/postgres-invitations.js";
 
 const config = loadConfig();
 const pool=new pg.Pool({connectionString:config.DATABASE_URL,max:10,connectionTimeoutMillis:5000,idleTimeoutMillis:30000});
-const app=await buildApp(config,new PostgresSessionStore(pool),new PostgresEmployeeRepository(pool),new PostgresImportRepository(pool),new PostgresDocumentRepository(pool),new LocalObjectStorage(config.STORAGE_ROOT),new PostgresChatRepository(pool),new DeterministicProvider(),new PostgresOperationsRepository(pool),new PostgresAdministrationRepository(pool),new PostgresEmployeeOperationsRepository(pool));
+const app=await buildApp(config,new PostgresSessionStore(pool),new PostgresEmployeeRepository(pool),new PostgresImportRepository(pool),new PostgresDocumentRepository(pool),new LocalObjectStorage(config.STORAGE_ROOT),new PostgresChatRepository(pool),new DeterministicProvider(),new PostgresOperationsRepository(pool),new PostgresAdministrationRepository(pool),new PostgresEmployeeOperationsRepository(pool),new PostgresInvitationRepository(pool));
 app.addHook("onClose",async()=>pool.end());
 await app.listen({ port: config.PORT, host: config.HOST });

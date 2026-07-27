@@ -33,6 +33,7 @@ If an older local Compose database volume predates the split migration/runtime r
 4. Open People and inspect Avery's own training, certification, and equipment record.
 5. Sign in as manager Jordan and verify the direct report is visible while unrelated employees are absent.
 6. Sign in as the tenant administrator and review users, roles, tenant settings, and recent audit events.
+   Create an invitation for a new fictional `.example.invalid` user, open the one-time setup link in a private browser context, set a password, and sign in.
 7. Sign in to Cedar and verify that Northstar records, policies, imports, citations, and audit events are unavailable.
 
 ## Expected safety behavior

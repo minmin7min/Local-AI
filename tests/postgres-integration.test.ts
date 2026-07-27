@@ -3,6 +3,8 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { PostgresSessionStore } from "../src/adapters/postgres-session-store.js";
 import { PostgresAdministrationRepository } from "../src/adapters/postgres-administration.js";
 import { PostgresEmployeeOperationsRepository } from "../src/adapters/postgres-employee-operations.js";
+import { PostgresInvitationRepository } from "../src/adapters/postgres-invitations.js";
+import { InvitationService } from "../src/domain/invitations.js";
 
 const runtimeUrl = process.env.TEST_DATABASE_URL;
 const suite = runtimeUrl ? describe : describe.skip;
@@ -85,6 +87,20 @@ suite("PostgreSQL tenant boundary", () => {
     expect(await repository.deactivateMember(login!.principal, created.membershipId, "integration-admin-deactivate")).toBe(true);
     const updated = await repository.updateSettings(login!.principal, { timezone: "America/Vancouver", reminderDays: [30, 60, 90] }, "integration-settings");
     expect(updated.reminderDays).toEqual([30, 60, 90]);
+  });
+
+  it("accepts a hashed one-time invitation and rejects replay", async () => {
+    const store = new PostgresSessionStore(pool);
+    const owner = await store.findLogin("northstar", "casey.bennett@northstar.example.invalid");
+    const repository = new PostgresInvitationRepository(pool);
+    const service = new InvitationService(repository);
+    const created = await service.create(owner!.principal, { email: "invitee@northstar.example.invalid", displayName: "Synthetic Invitee", roles: ["employee"] }, "integration-invitation");
+    expect(await service.inspect(created.setupToken)).toMatchObject({ email: "invitee@northstar.example.invalid", tenantSlug: "northstar" });
+    const accepted = await service.accept(created.setupToken, "Synthetic-Invite-Password!", "integration-invitation-accept");
+    expect(accepted).toMatchObject({ tenantSlug: "northstar", email: "invitee@northstar.example.invalid" });
+    await expect(service.inspect(created.setupToken)).rejects.toThrow("invalid or has expired");
+    const login = await store.findLogin("northstar", "invitee@northstar.example.invalid");
+    expect(login?.principal.roles).toEqual(["employee"]);
   });
 
   it("scopes operational subrecords and generates source-linked deadlines", async () => {

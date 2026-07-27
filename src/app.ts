@@ -23,9 +23,12 @@ import { registerAdministrationRoutes } from "./routes/administration.js";
 import type { EmployeeOperationsRepository } from "./domain/employee-operations.js";
 import { EmployeeOperationsService } from "./domain/employee-operations.js";
 import { registerEmployeeOperationsRoutes } from "./routes/employee-operations.js";
+import type { InvitationRepository } from "./domain/invitations.js";
+import { InvitationService } from "./domain/invitations.js";
+import { registerInvitationRoutes } from "./routes/invitations.js";
 
 const loginSchema=z.object({tenantSlug:z.string().min(2).max(80),email:z.string().email().max(254),password:z.string().min(10).max(1024)});
-export async function buildApp(config:Config,store:SessionStore,employeeRepository?:EmployeeRepository,importRepository?:ImportRepository,documentRepository?:DocumentRepository,objectStorage?:ObjectStorage,chatRepository?:ChatRepository,aiProvider?:AIProvider,operationsRepository?:OperationsRepository,adminRepository?:AdminRepository,employeeOperationsRepository?:EmployeeOperationsRepository):Promise<FastifyInstance>{
+export async function buildApp(config:Config,store:SessionStore,employeeRepository?:EmployeeRepository,importRepository?:ImportRepository,documentRepository?:DocumentRepository,objectStorage?:ObjectStorage,chatRepository?:ChatRepository,aiProvider?:AIProvider,operationsRepository?:OperationsRepository,adminRepository?:AdminRepository,employeeOperationsRepository?:EmployeeOperationsRepository,invitationRepository?:InvitationRepository):Promise<FastifyInstance>{
  const app=Fastify({logger:{redact:["req.headers.authorization","req.headers.cookie","body.password"]},requestIdHeader:"x-request-id",genReqId:()=>randomUUID(),bodyLimit:config.MAX_UPLOAD_BYTES});
  const sessions=new SessionService(store,config.SESSION_TTL_SECONDS);
  await app.register(helmet,{contentSecurityPolicy:true}); await app.register(cookie,{secret:config.SESSION_SECRET,hook:"onRequest"});
@@ -50,5 +53,6 @@ export async function buildApp(config:Config,store:SessionStore,employeeReposito
  if(operationsRepository)registerOperationsRoutes(app,sessions,new OperationsService(operationsRepository));
  if(adminRepository)registerAdministrationRoutes(app,sessions,new AdministrationService(adminRepository));
  if(employeeOperationsRepository)registerEmployeeOperationsRoutes(app,sessions,new EmployeeOperationsService(employeeOperationsRepository));
+ if(invitationRepository)registerInvitationRoutes(app,sessions,new InvitationService(invitationRepository));
  return app;
 }

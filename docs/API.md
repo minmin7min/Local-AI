@@ -7,6 +7,8 @@ All protected endpoints use the opaque `pcai_session` cookie. Mutating endpoints
 | POST | `/api/auth/login` | Resolve tenant membership and issue a revocable session |
 | GET | `/api/auth/me` | Return the active tenant identity and roles |
 | POST | `/api/auth/logout` | CSRF-protected session revocation |
+| POST | `/api/auth/invitations/inspect` | Resolve an unexpired one-time invitation without exposing the token in the URL |
+| POST | `/api/auth/invitations/accept` | Atomically activate an invited account and consume the token |
 | GET/PATCH | `/api/employees[/:id]` | Scope-filtered employee operations read/update |
 | GET | `/api/employees/:id/operations` | Scope-filtered training, certification, and equipment detail |
 | POST | `/api/employees/:id/training` | HR-managed training record with deadline generation |
@@ -26,6 +28,7 @@ All protected endpoints use the opaque `pcai_session` cookie. Mutating endpoints
 | GET | `/api/notifications` | Current membership's in-app notifications |
 | GET | `/api/audit` | Tenant-admin audit viewer feed |
 | GET/POST | `/api/admin/members` | List or create synthetic tenant users |
+| POST | `/api/admin/invitations` | Create a tenant-scoped, 48-hour, single-use synthetic account invitation |
 | PUT | `/api/admin/members/:id/roles` | Replace a membership's additive role set with last-admin protection |
 | POST | `/api/admin/members/:id/deactivate` | Deactivate a membership and revoke its sessions |
 | GET/PATCH | `/api/admin/settings` | View or update tenant timezone, retention, and reminder settings |

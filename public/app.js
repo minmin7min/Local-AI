@@ -31,12 +31,11 @@ async function renderAdministration(container) {
         <label class="check"><input name="inAppNotifications" type="checkbox" ${settings.inAppNotifications ? "checked" : ""}>Enable in-app notifications</label>
         <button>Save settings</button><p class="form-status" role="status"></p>
       </form></section>
-      <section><h3>Create synthetic user</h3><form id="member-form" class="compact">
+      <section><h3>Invite synthetic user</h3><form id="member-form" class="compact">
         <label>Display name<input name="displayName" required maxlength="120"></label>
         <label>Work email<input name="email" type="email" placeholder="person@northstar.example.invalid" required></label>
-        <label>Temporary password<input name="password" type="password" minlength="14" required></label>
         <fieldset><legend>Roles</legend><div class="role-grid">${roleChecks(["employee"])}</div></fieldset>
-        <button>Create user</button><p class="form-status" role="status"></p>
+        <button>Create secure invitation</button><p class="form-status" role="status"></p>
       </form></section>
     </div>
     <h3>Users and roles</h3><div class="list">${memberData.members.map((member) => `<article class="item member ${member.deactivatedAt ? "inactive" : ""}">
@@ -55,8 +54,10 @@ async function renderAdministration(container) {
   $("#member-form").onsubmit = async (event) => {
     event.preventDefault(); const form = event.currentTarget; const status = form.querySelector(".form-status"); status.textContent = "Creating…";
     try {
-      const data = new FormData(form); await api("/api/admin/members", { method: "POST", body: JSON.stringify({ displayName: data.get("displayName"), email: data.get("email"), password: data.get("password"), roles: data.getAll("roles") }) });
-      await renderAdministration(container);
+      const data = new FormData(form); const invitation = await api("/api/admin/invitations", { method: "POST", body: JSON.stringify({ displayName: data.get("displayName"), email: data.get("email"), roles: data.getAll("roles") }) });
+      const setupUrl = `${location.origin}/#invite=${encodeURIComponent(invitation.setupToken)}`;
+      status.innerHTML = `Invitation created. Email delivery is disabled in this preview. Share this one-time link only with the fictional recipient:<br><a href="${escapeHtml(setupUrl)}">${escapeHtml(setupUrl)}</a><br>Expires ${escapeHtml(new Date(invitation.expiresAt).toLocaleString())}.`;
+      form.reset();
     } catch (error) { status.textContent = error.message; status.classList.add("error"); }
   };
   document.querySelectorAll(".role-form").forEach((form) => {
@@ -142,3 +143,26 @@ $("#login-form").onsubmit = async (event) => {
 $("#demo-login").onclick = async (event) => signIn({ tenantSlug: "northstar", email: "casey.bennett@northstar.example.invalid", password: "Synthetic-Demo-Only-Change-Me!" }, event.currentTarget);
 document.querySelectorAll("nav button").forEach((button) => { button.onclick = () => show(button.dataset.view); });
 $("#logout").onclick = async () => { await api("/api/auth/logout", { method: "POST", body: "{}" }); location.reload(); };
+
+const invitationToken = location.hash.startsWith("#invite=") ? decodeURIComponent(location.hash.slice(8)) : "";
+async function showInvitation(token) {
+  $("#login").hidden = true; $("#invite").hidden = false;
+  try {
+    const invitation = await api("/api/auth/invitations/inspect", { method: "POST", body: JSON.stringify({ token }) });
+    $("#invite-summary").textContent = `${invitation.displayName}, you were invited to ${invitation.tenantName} as ${invitation.roles.join(", ")}. This one-time invitation expires ${new Date(invitation.expiresAt).toLocaleString()}.`;
+    $("#invite-form").hidden = false;
+  } catch (error) { $("#invite-summary").textContent = error.message; }
+}
+$("#invite-back").onclick = () => { history.replaceState(null, "", location.pathname); location.reload(); };
+$("#invite-form").onsubmit = async (event) => {
+  event.preventDefault(); const form = event.currentTarget; const data = new FormData(form); const status = $("#invite-status");
+  if (data.get("password") !== data.get("confirmPassword")) { status.textContent = "Passwords do not match."; status.classList.add("error"); return; }
+  status.textContent = "Activating…"; status.classList.remove("error");
+  try {
+    const accepted = await api("/api/auth/invitations/accept", { method: "POST", body: JSON.stringify({ token: invitationToken, password: data.get("password") }) });
+    history.replaceState(null, "", location.pathname); $("#invite").hidden = true; $("#login").hidden = false;
+    $("#login-form").elements.tenantSlug.value = accepted.tenantSlug; $("#login-form").elements.email.value = accepted.email; $("#login-form").elements.password.value = "";
+    $("#login-error").textContent = "Account activated. Sign in with your new password.";
+  } catch (error) { status.textContent = error.message; status.classList.add("error"); }
+};
+if (invitationToken) showInvitation(invitationToken);

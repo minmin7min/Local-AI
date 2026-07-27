@@ -16,7 +16,7 @@ AI answers may be incomplete and are not employment, legal, immigration, medical
 
 ## Unresolved pre-production risks
 
-- MFA, recovery, breached-password checks, session-device UI, and a reviewed SSO path.
+- Secure invitation email delivery, MFA, recovery, breached-password checks, session-device UI, and a reviewed SSO path. Invitation tokens are currently random, stored only as SHA-256 hashes, expire after 48 hours, and are consumed atomically; preview links must remain fictional-data-only.
 - Malware/CDR pipeline and hardened parser sandbox.
 - External penetration test, privacy impact assessment, legal review, and cloud architecture review.
 - Exact retention/deletion policy by jurisdiction and customer contract.
