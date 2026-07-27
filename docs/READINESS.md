@@ -11,10 +11,10 @@ The repository is a functional, synthetic-data MVP and sales-demo foundation. It
 | Policy knowledge workflow | Implemented | Upload, isolated extraction, review, approval, retrieval, citations, no-answer path |
 | Tenant administration | Implemented | Synthetic users, role lifecycle, settings, session revocation, last-admin protection |
 | Local reproducible deployment | Implemented and CI-verified | Compose splits migration and runtime roles, runs tenant-scoped workers, and uses the runner PostgreSQL service in CI |
-| Automated application checks | Passing locally; pending GitHub verification for this change | Lint, strict type-check, 45 unit/security tests, and the production build pass locally |
-| PostgreSQL/RLS integration checks | Passing locally; pending GitHub verification for this change | Seven tests execute with a non-owner/no-`BYPASSRLS` role and are release-blocking |
+| Automated application checks | Passing locally and in GitHub | Lint, strict type-check, 45 unit/security tests, and the production build passed in [CI run #32](https://github.com/minmin7min/Local-AI/actions/runs/30230050645) |
+| PostgreSQL/RLS integration checks | Passing locally and in GitHub | Seven tests execute with a non-owner/no-`BYPASSRLS` role and passed in [CI run #32](https://github.com/minmin7min/Local-AI/actions/runs/30230050645) |
 | Dependency security | Passing | npm reports zero known vulnerabilities; high-severity production findings fail CI while advisory-service outages remain visible warnings |
-| End-to-end browser suite | Core journeys implemented | Four Chromium tests gate full-demo entry, grounded answers, employee records, administration, invitation activation, role visibility, and cross-tenant denial in the PostgreSQL CI job; destructive upload/import workflows remain to automate |
+| End-to-end browser suite | Core journeys passing in GitHub | Four Chromium tests gate full-demo entry, grounded answers, employee records, administration, invitation activation, role visibility, and cross-tenant denial in [CI run #32](https://github.com/minmin7min/Local-AI/actions/runs/30230050645); destructive upload/import workflows remain to automate |
 | Production identity | In progress; blocked for real use | Hashed 48-hour one-time invitations and password setup are implemented. Secure email delivery, address verification, MFA, recovery, breached-password checks, session-device controls, and reviewed SSO remain |
 | Production file security | Blocked for real use | Malware/CDR scanning, hardened parser sandbox, encrypted private object storage |
 | Production infrastructure | Blocked | Managed database/object storage/secrets, TLS ingress, monitoring, alerting, backups, restore test, IaC |
