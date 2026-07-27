@@ -8,6 +8,8 @@ async function api(path, options = {}) {
   if (!(options.body instanceof FormData)) headers["content-type"] = "application/json";
   const response = await fetch(path, { ...options, headers });
   if (response.status === 204) return null;
+  const contentType = response.headers.get("content-type") || "";
+  if (!contentType.includes("application/json")) throw new Error("The application API is not available. Open the full demo server instead of the static preview.");
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || "Request failed");
   return data;
@@ -126,13 +128,17 @@ async function show(view) {
   } catch (error) { container.innerHTML = `<p class="error">${escapeHtml(error.message)}</p>`; }
 }
 
-$("#login-form").onsubmit = async (event) => {
-  event.preventDefault(); const fields = Object.fromEntries(new FormData(event.currentTarget));
+async function signIn(fields, button) {
+  const originalText = button?.textContent; $("#login-error").textContent = ""; if (button) { button.disabled = true; button.textContent = "Opening demo…"; }
   try {
     const data = await api("/api/auth/login", { method: "POST", body: JSON.stringify(fields) });
     csrf = data.csrfToken; activeRoles = data.user.roles; $("#admin-nav").hidden = !activeRoles.some((role) => role === "owner" || role === "tenant_admin"); $("#imports-nav").hidden = !activeRoles.some((role) => role === "hr" || role === "tenant_admin");
     $("#login").hidden = true; $("#app").hidden = false; show("dashboard");
-  } catch (error) { $("#login-error").textContent = error.message; }
+  } catch (error) { $("#login-error").textContent = error.message; if (button) { button.disabled = false; button.textContent = originalText; } }
+}
+$("#login-form").onsubmit = async (event) => {
+  event.preventDefault(); await signIn(Object.fromEntries(new FormData(event.currentTarget)), event.submitter);
 };
+$("#demo-login").onclick = async (event) => signIn({ tenantSlug: "northstar", email: "casey.bennett@northstar.example.invalid", password: "Synthetic-Demo-Only-Change-Me!" }, event.currentTarget);
 document.querySelectorAll("nav button").forEach((button) => { button.onclick = () => show(button.dataset.view); });
 $("#logout").onclick = async () => { await api("/api/auth/logout", { method: "POST", body: "{}" }); location.reload(); };
