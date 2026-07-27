@@ -10,3 +10,5 @@ tmp/e2e-storage/
 *.log
 .DS_Store
 tmp/
+public/app 2.js
+scripts/worker 2.ts
